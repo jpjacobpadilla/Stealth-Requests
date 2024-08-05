@@ -1,6 +1,8 @@
 import random
 from urllib.parse import urlparse
+from collections import defaultdict
 from functools import partialmethod
+
 from curl_cffi.requests.session import Session
 from curl_cffi.requests.models import Response
 
@@ -77,7 +79,7 @@ class StealthSession(Session):
             impersonate = 'chrome124'
 
         self.profile = random.choice(PROFILES[impersonate])
-        self.last_request_url = ''
+        self.last_request_url = defaultdict(lambda: 'https://www.google.com/')
         
         super().__init__(
             *args, 
@@ -118,10 +120,10 @@ class StealthSession(Session):
 
         headers = {
             "Host": host,
-            "Referer": self.last_request_url or 'https://www.google.com/'
+            "Referer": self.last_request_url[host]
         }
 
-        self.last_request_url = url
+        self.last_request_url[host] = url
         return headers
         
     def request(self, method: str, url: str, *args, **kwargs) -> Response:
