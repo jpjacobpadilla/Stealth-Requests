@@ -5,7 +5,7 @@ from functools import partialmethod
 
 from .response import StealthResponse
 
-from curl_cffi.requests.session import Session
+from curl_cffi.requests.session import Session, AsyncSession
 from curl_cffi.requests.models import Response
 
 
@@ -75,7 +75,7 @@ PROFILES = {
 }
 
 
-class StealthSession(Session):
+class BaseStealthSession:
     def __init__(
             self, 
             user_agent: str = None,
@@ -90,7 +90,6 @@ class StealthSession(Session):
         self.last_request_url = defaultdict(lambda: 'https://www.google.com/')
         
         super().__init__(
-            *args, 
             headers=self.initialize_headers(),
             impersonate=impersonate, 
             **kwargs
@@ -100,6 +99,13 @@ class StealthSession(Session):
         return self
 
     def __exit__(self, *_):
+        self.close()
+        return False
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_):
         self.close()
         return False
 
@@ -136,16 +142,33 @@ class StealthSession(Session):
 
         self.last_request_url[host] = url
         return headers
-        
+
+    post = partialmethod(Session.request, "POST")
+    put = partialmethod(Session.request, "PUT")
+    patch = partialmethod(Session.request, "PATCH")
+    delete = partialmethod(Session.request, "DELETE")
+    options = partialmethod(Session.request, "OPTIONS")
+
+class StealthSession(BaseStealthSession, Session):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def request(self, method: str, url: str, *args, **kwargs) -> Response:
         headers = self.get_dynamic_headers(url) | kwargs.pop('headers', {})
-        resp = super().request(method, url, *args, headers=headers, **kwargs)
+        resp = Session.request(self, method, url, *args, headers=headers, **kwargs)
         return StealthResponse(resp)
     
     head = partialmethod(request, "HEAD")
     get = partialmethod(request, "GET")
-    post = partialmethod(request, "POST")
-    put = partialmethod(request, "PUT")
-    patch = partialmethod(request, "PATCH")
-    delete = partialmethod(request, "DELETE")
-    options = partialmethod(request, "OPTIONS")
+
+class AsyncStealthSession(BaseStealthSession, AsyncSession):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    async def request(self, method: str, url: str, *args, **kwargs) -> Response:
+        headers = self.get_dynamic_headers(url) | kwargs.pop('headers', {})
+        resp = await AsyncSession.request(self, method, url, *args, headers=headers, **kwargs)
+        return StealthResponse(resp)
+    
+    head = partialmethod(request, "HEAD")
+    get = partialmethod(request, "GET")
