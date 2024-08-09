@@ -3,6 +3,8 @@ from urllib.parse import urlparse
 from collections import defaultdict
 from functools import partialmethod
 
+from .response import StealthResponse
+
 from curl_cffi.requests.session import Session
 from curl_cffi.requests.models import Response
 
@@ -128,7 +130,8 @@ class StealthSession(Session):
         
     def request(self, method: str, url: str, *args, **kwargs) -> Response:
         headers = self.get_dynamic_headers(url) | kwargs.pop('headers', {})
-        return super().request(method, url, *args, headers=headers, **kwargs)
+        resp = super().request(method, url, *args, headers=headers, **kwargs)
+        return StealthResponse(resp)
     
     head = partialmethod(request, "HEAD")
     get = partialmethod(request, "GET")
