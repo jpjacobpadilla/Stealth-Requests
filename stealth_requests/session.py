@@ -76,11 +76,17 @@ PROFILES = {
 
 
 class StealthSession(Session):
-    def __init__(self, *args, impersonate: str = 'chrome124', **kwargs):
+    def __init__(
+            self, 
+            user_agent: str = None,
+            impersonate: str = 'chrome124', 
+            **kwargs
+        ):
         if impersonate == 'chrome':
             impersonate = 'chrome124'
 
         self.profile = random.choice(PROFILES[impersonate])
+        self.user_agent = user_agent
         self.last_request_url = defaultdict(lambda: 'https://www.google.com/')
         
         super().__init__(
@@ -124,6 +130,9 @@ class StealthSession(Session):
             "Host": host,
             "Referer": self.last_request_url[host]
         }
+
+        if self.user_agent:
+            headers['User-Agent'] = self.user_agent
 
         self.last_request_url[host] = url
         return headers
