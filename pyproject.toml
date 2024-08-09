@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stealth-requests"
+version = "0.1"
+description = "Make HTTP requests exactly like a browser."
+readme = "README.md"
+requires-python = ">=3.6"
+license = { text = "MIT" }
+authors = [
+    { name = "Jacob Padilla", email = "jp@jacobpadilla.com" }
+]
+keywords = [""]
+urls = { "Homepage" = "https://github.com/jpjacobpadilla/Stealth-Requests" }
+
+dependencies = ["curl_cffi"]
+
+[project.optional-dependencies]
+parsers = [
+    "lxml",
+    "html2text",
+    "beautifulsoup4"
+]
+
+[tool.setuptools.packages.find]
+include = ["stealth_requests"]
