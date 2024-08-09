@@ -1,5 +1,5 @@
 from functools import partial
-from .session import StealthSession
+from .session import StealthSession, AsyncStealthSession
 from curl_cffi.requests import *
 
 
