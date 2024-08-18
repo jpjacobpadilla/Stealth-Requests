@@ -19,7 +19,8 @@ class Metadata:
     robots: tuple[str]
     canonical: str
 
-PARSER_IMPORT_ERROR = "BeautifulSoup is required for markdown extraction. Install it using 'pip install stealth-requests[parsers]'."
+PARSER_IMPORT_SOLUTION = "Install it using 'pip install stealth-requests[parsers]'."
+
 
 class StealthResponse():
     def __init__(self, resp):
@@ -35,7 +36,7 @@ class StealthResponse():
         try:
             from lxml import html
         except ImportError:
-            raise ImportError(PARSER_IMPORT_ERROR)
+            raise ImportError(f'Lxml is not installed. {PARSER_IMPORT_SOLUTION}')
 
         self._tree = html.fromstring(self.content)
         return self._tree
@@ -47,7 +48,7 @@ class StealthResponse():
         try:
             from bs4 import BeautifulSoup
         except ImportError:
-            raise ImportError(PARSER_IMPORT_ERROR)
+            raise ImportError(f'BeautifulSoup is required for markdown extraction. {PARSER_IMPORT_SOLUTION}')
 
         return BeautifulSoup(self.content, parser)
     
@@ -55,7 +56,7 @@ class StealthResponse():
         try:
             import html2text
         except ImportError:
-            raise ImportError(PARSER_IMPORT_ERROR)
+            raise ImportError(f'Html2text is required for markdown extraction. {PARSER_IMPORT_SOLUTION}')
 
         text_maker = html2text.HTML2Text()
         text_maker.ignore_links = True
