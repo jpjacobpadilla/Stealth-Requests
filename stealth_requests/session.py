@@ -23,20 +23,20 @@ class BaseStealthSession:
     def __init__(
             self, 
             client_profile: str = None,
-            impersonate: str = 'chrome_124', 
+            impersonate: str = 'chrome124', 
             **kwargs
         ):
         if impersonate.lower() in ('chrome', 'chrome124'):
-            impersonate = 'chrome_124'
-        elif impersonate.lower() in ('safari', 'safari17_0', 'safari17'):
-            impersonate = 'safari_17_0'
+            impersonate = 'chrome124'
+        elif impersonate.lower() in ('safari', 'safari_17_0', 'safari17'):
+            impersonate = 'safari17_0'
 
-        self.profile = client_profile or self.create_profile(impersonate)
+        self.profile = client_profile or BaseStealthSession.create_profile(impersonate)
         self.last_request_url = defaultdict(lambda: 'https://www.google.com/')
         
         super().__init__(
             headers=self.initialize_chrome_headers() 
-                if impersonate == 'chrome_124' 
+                if impersonate == 'chrome124' 
                 else self.initialize_safari_headers(),
             impersonate=impersonate, 
             **kwargs
@@ -56,8 +56,12 @@ class BaseStealthSession:
         self.close()
         return False
     
+    @staticmethod
     def create_profile(impersonate: str) -> ClientProfile:
-        with open('.profiles.json', encoding='utf-8', mode='r') as file:
+        import os
+        file_path = os.path.join(os.path.dirname(__file__), 'profiles.json')
+
+        with open(file_path, encoding='utf-8', mode='r') as file:
             user_agents = json.load(file)
 
         assert impersonate in user_agents.keys(), f'Please choose one of the supported profiles: {user_agents.keys()}'
@@ -65,8 +69,8 @@ class BaseStealthSession:
         return ClientProfile(
             user_agent=random.choice(user_agents[impersonate]),
             sec_ch_ua='"Not A;Brand";v="99", "Chromium";v="124", "Google Chrome";v="124"' if impersonate == 'chrome_124' else None,
-            sec_ch_ua='?0' if impersonate == 'chrome_124' else None,
-            sec_ch_ua='"macOS"' if impersonate == 'chrome_124' else None
+            sec_ch_ua_mobile='?0' if impersonate == 'chrome_124' else None,
+            sec_ch_ua_platform='"macOS"' if impersonate == 'chrome_124' else None
         )
         
     def initialize_chrome_headers(self) -> dict[str, str]:
