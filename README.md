@@ -2,7 +2,7 @@
     <img src="https://github.com/jpjacobpadilla/Stealth-Requests/blob/7f83b67a0d62a932663d8216bad7d25971c90aaf/logo.png">
 </p>
 
-<h1 align="center">Send HTTP Request Like a Browser.</h1>
+<h1 align="center">Stay Undetected While Scraping the Web.</h1>
 
 ### The All-In-One Solution to Web Scraping:
 - Mimic the headers sent by a browser when going to a website (GET requests)
