@@ -118,11 +118,6 @@ class BaseStealthSession:
         self.last_request_url[host] = url
         return headers
 
-    post = partialmethod(Session.request, "POST")
-    put = partialmethod(Session.request, "PUT")
-    patch = partialmethod(Session.request, "PATCH")
-    delete = partialmethod(Session.request, "DELETE")
-    options = partialmethod(Session.request, "OPTIONS")
 
 class StealthSession(BaseStealthSession, Session):
     def __init__(self, *args, **kwargs):
@@ -135,6 +130,11 @@ class StealthSession(BaseStealthSession, Session):
     
     head = partialmethod(request, "HEAD")
     get = partialmethod(request, "GET")
+    post = partialmethod(request, "POST")
+    put = partialmethod(request, "PUT")
+    patch = partialmethod(request, "PATCH")
+    delete = partialmethod(request, "DELETE")
+    options = partialmethod(request, "OPTIONS")
 
 class AsyncStealthSession(BaseStealthSession, AsyncSession):
     def __init__(self, *args, **kwargs):
@@ -147,3 +147,8 @@ class AsyncStealthSession(BaseStealthSession, AsyncSession):
     
     head = partialmethod(request, "HEAD")
     get = partialmethod(request, "GET")
+    post = partialmethod(request, "POST")
+    put = partialmethod(request, "PUT")
+    patch = partialmethod(request, "PATCH")
+    delete = partialmethod(request, "DELETE")
+    options = partialmethod(request, "OPTIONS")
