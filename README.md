@@ -17,7 +17,7 @@ This package mimics the API of the `requests` package, and thus can be used in b
 
 You can send one-off requests like such:
 
-```
+```python
 import stealth_requests and requests
 
 resp = requests.get(link)
@@ -25,7 +25,7 @@ resp = requests.get(link)
 
 Or you can use a `StealthSession` object which will keep track of certain headers for you between requests such as the `Referer` header.
 
-```
+```python
 from stealth_requests import StealthSession
 
 with StealthSession() as s:
@@ -38,7 +38,7 @@ When sending a one-off request, or creating a session, you can specify the type 
 
 This package supports Asyncio in the same way as the `requests` package.
 
-```
+```python
 from stealth_requests import AsyncStealthSession
 
 async with AsyncStealthSession(impersonate='chrome') as s:
@@ -47,7 +47,7 @@ async with AsyncStealthSession(impersonate='chrome') as s:
 
 or, for a one off request you can do something like this:
 
-```
+```python
 from curl_cffi import requests
 
 resp = await requests.post(link, data=...)
@@ -68,7 +68,7 @@ The response returned from this package is a `StealthResponse` which has all of 
 
 Heres an example of how to get the title of a page:
 
-```
+```python
 import stealth_requests and requests
 
 resp = requests.get(link)
