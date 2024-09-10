@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://github.com/jpjacobpadilla/Stealth-Requests/blob/7f83b67a0d62a932663d8216bad7d25971c90aaf/logo.png">
+    <img src="https://github.com/jpjacobpadilla/Stealth-Requests/blob/0572cdf58d141239e945a1562490b1d00054379c/logo.png?raw=true">
 </p>
 
 <h1 align="center">Stay Undetected While Scraping the Web.</h1>
