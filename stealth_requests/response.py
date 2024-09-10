@@ -10,14 +10,14 @@ if TYPE_CHECKING:
 
 @dataclass
 class Metadata:
-    title: str
-    description: str
-    thumbnail: str
-    author: str
-    keywords: tuple[str]
-    twitter_handle: str
-    robots: tuple[str]
-    canonical: str
+    title: str | None
+    description: str | None
+    thumbnail: str | None
+    author: str | None
+    keywords: tuple[str] | None
+    twitter_handle: str | None
+    robots: tuple[str] | None
+    canonical: str | None
 
 PARSER_IMPORT_SOLUTION = "Install it using 'pip install stealth-requests[parsers]'."
 
