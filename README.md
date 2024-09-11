@@ -31,11 +31,11 @@ with StealthSession() as s:
     resp = s.get("https://link-here.com")
 ```
 
-When sending a one-off request, or creating a session, you can specify the type of browser that you want the request to mimic - either `safari` or `chrome` (which is the default).
+When sending a request, or creating a `StealthSession`, you can specify the type of browser that you want the request to mimic - either `chrome`, which is the default, or `safari`. If you want to change which browser to mimic, set the `impersonate` argument, either in `requests.get` or when initializing `StealthSession` to `safari` or `chrome`.
 
 ### Sending Requests With Asyncio
 
-This package supports Asyncio in the same way as the `requests` package.
+This package supports Asyncio in the same way as the `requests` package:
 
 ```python
 from stealth_requests import AsyncStealthSession
@@ -44,7 +44,7 @@ async with AsyncStealthSession(impersonate='chrome') as s:
     resp = await s.get("https://link-here.com")
 ```
 
-or, for a one off request you can do something like this:
+or, for a one-off request you can make a request like this:
 
 ```python
 import stealth_requests as requests
@@ -54,7 +54,7 @@ resp = await requests.post("https://link-here.com", data=...)
 
 ### Getting Response Metadata
 
-The response returned from this package is a `StealthResponse` which has all of the same methods and attributes as a standard `requests` response, with a few added features. One if automatic parsing of header metadata. The metadata can be accessed from the `meta` attribute, which gives you access to the following data (if it's available on the scraped website):
+The response returned from this package is a `StealthResponse`, which has all of the same methods and attributes as a standard `requests` response object, with a few added features. One of these extra features is automatic parsing of header metadata for HTML-based responses. The metadata can be accessed from the `meta` attribute, which gives you access to the following data:
 
 - title: str
 - description: str
@@ -74,19 +74,19 @@ resp = requests.get("https://link-here.com")
 print(resp.meta.title)
 ```
 
-### Parsing Response
+### Parsing Responses
 
-To make parsing HTML easier, I've also added two popular parsing packages to this project - `Lxml` and `BeautifulSoup4`. To install these add-ons you need to install the parsers extra: `pip install stealth_requests[parsers]`.
+To make parsing HTML easier, I've also added two popular parsing packages to Stealth-Requests - `Lxml` and `BeautifulSoup4`. To use these add-ons you need to install the `parsers` extra: `pip install stealth_requests[parsers]`.
 
 To easily get an Lxml tree, you can use `resp.tree()` and to get a BeautifulSoup object, use the `resp.soup()` method.
 
-For simple parsing, I've also added the following convenience methods right to the `StealthResponse` object:
+For simple parsing, I've also added the following convenience methods, from the Lxml package, right into the `StealthResponse` object:
 
 - `iterlinks` Iterate through all links in an HTML response
 - `itertext`: Iterate through all text in an HTML response
 - `text_content`: Get all text content in an HTML response
 - `xpath` Go right to using XPATH expressions instead of getting your own Lxml tree.
 
-### Getting HTML response in MarkDown format
+### Getting HTML response in Markdown format
 
-Sometimes it's easier to get a webpage in MarkDown format instead of HTML. To do this, use the `resp.markdown()` method, after sending a GET request to a website.
+In some cases, it’s easier to work with a webpage in Markdown format rather than HTML. After making a GET request that returns HTML, you can use the `resp.markdown()` method to convert the response into a Markdown string, providing a simplified and readable version of the page content!
