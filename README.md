@@ -12,7 +12,7 @@
 
 ### Sending Requests
 
-This package mimics the API of the [requests](https://requests.readthedocs.io/en/latest/) package, allowing you to use it in nearly the same way.
+Stealth-Requests mimics the API of the [requests](https://requests.readthedocs.io/en/latest/) package, allowing you to use it in nearly the same way.
 
 You can send one-off requests like such:
 
