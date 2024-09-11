@@ -10,6 +10,12 @@
 - Automatically extract metadata from HTML responses including page title, description, author, and more
 - Easily convert HTML-based responses into [lxml](https://lxml.de/apidoc/lxml.html) and [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/) objects
 
+### Install
+
+```
+pip install stealth_requests
+```
+
 ### Sending Requests
 
 Stealth-Requests mimics the API of the [requests](https://requests.readthedocs.io/en/latest/) package, allowing you to use it in nearly the same way.
