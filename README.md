@@ -18,7 +18,7 @@ This package mimics the API of the `requests` package, and thus can be used in b
 You can send one-off requests like such:
 
 ```python
-import stealth_requests and requests
+import stealth_requests as requests
 
 resp = requests.get(link)
 ```
@@ -48,14 +48,14 @@ async with AsyncStealthSession(impersonate='chrome') as s:
 or, for a one off request you can do something like this:
 
 ```python
-from curl_cffi import requests
+import stealth_requests as requests
 
 resp = await requests.post(link, data=...)
 ```
 
 ### Getting Response Metadata
 
-The response returned from this package is a `StealthResponse` which has all of the same methods and attributes as a standard `requests` response, with a few added features. One if automatic parsing of header metadata. The metadata can be accessed from the `meta` attribute, which gives you access to the following data (if it's avaible on the scraped website):
+The response returned from this package is a `StealthResponse` which has all of the same methods and attributes as a standard `requests` response, with a few added features. One if automatic parsing of header metadata. The metadata can be accessed from the `meta` attribute, which gives you access to the following data (if it's available on the scraped website):
 
 - title: str
 - description: str
@@ -66,7 +66,7 @@ The response returned from this package is a `StealthResponse` which has all of 
 - robots: tuple[str]
 - canonical: str
 
-Heres an example of how to get the title of a page:
+Here's an example of how to get the title of a page:
 
 ```python
 import stealth_requests and requests
@@ -81,7 +81,7 @@ To make parsing HTML easier, I've also added two popular parsing packages to thi
 
 To easily get an Lxml tree, you can use `resp.tree()` and to get a BeautifulSoup object, use the `resp.soup()` method.
 
-For simple parsing, I've also added the following convience methods right to the `StealthResponse` object:
+For simple parsing, I've also added the following convenience methods right to the `StealthResponse` object:
 
 - `iterlinks` Iterate through all links in an HTML response
 - `itertext`: Iterate through all text in an HTML response

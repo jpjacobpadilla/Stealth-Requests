@@ -7,7 +7,7 @@ with open('README.md', 'r', encoding='utf-8') as f:
 setup(
     name='stealth-requests',
     description='Make HTTP requests exactly like a browser.',
-    version='0.1',
+    version='0.1.1',
     packages=['stealth_requests'],
     install_requires=['curl_cffi'],
     extras_require={
