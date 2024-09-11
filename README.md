@@ -19,7 +19,7 @@ You can send one-off requests like such:
 ```python
 import stealth_requests as requests
 
-resp = requests.get(link)
+resp = requests.get("https://link-here.com")
 ```
 
 Or you can use a `StealthSession` object which will keep track of certain headers for you between requests such as the `Referer` header.
@@ -28,7 +28,7 @@ Or you can use a `StealthSession` object which will keep track of certain header
 from stealth_requests import StealthSession
 
 with StealthSession() as s:
-    resp = s.get(link)
+    resp = s.get("https://link-here.com")
 ```
 
 When sending a one-off request, or creating a session, you can specify the type of browser that you want the request to mimic - either `safari` or `chrome` (which is the default).
@@ -41,7 +41,7 @@ This package supports Asyncio in the same way as the `requests` package.
 from stealth_requests import AsyncStealthSession
 
 async with AsyncStealthSession(impersonate='chrome') as s:
-    resp = await s.get(link)
+    resp = await s.get("https://link-here.com")
 ```
 
 or, for a one off request you can do something like this:
@@ -49,7 +49,7 @@ or, for a one off request you can do something like this:
 ```python
 import stealth_requests as requests
 
-resp = await requests.post(link, data=...)
+resp = await requests.post("https://link-here.com", data=...)
 ```
 
 ### Getting Response Metadata
@@ -70,7 +70,7 @@ Here's an example of how to get the title of a page:
 ```python
 import stealth_requests and requests
 
-resp = requests.get(link)
+resp = requests.get("https://link-here.com")
 print(resp.meta.title)
 ```
 
