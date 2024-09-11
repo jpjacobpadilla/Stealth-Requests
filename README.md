@@ -5,11 +5,11 @@
 <h1 align="center">Stay Undetected While Scraping the Web.</h1>
 
 ### The All-In-One Solution to Web Scraping:
-- Mimic the headers sent by a browser when going to a website (GET requests)
-- Automatically handle and update the Referer header & client hint headers
-- Mask the TLS fingerprint of the request using the [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/) package
-- Automatically parse the metadata from HTML responses such as page title, description, thumbnail, author, etc...
-- Easily get an [lxml](https://lxml.de/apidoc/lxml.html) tree or [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/) object from the HTTP response. 
+- Mimic browser headers when scraping websites to stay undetected
+- Automatically track and update the `Referer` header in subsequent requests
+- Mask TLS fingerprint of requests using the [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/) package
+- Automatically extract metadata from HTML responses including page title, description, author, and more
+- Easily convert HTML-based responses into [lxml](https://lxml.de/apidoc/lxml.html) and [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/) objects
 
 ### Sending Requests
 
