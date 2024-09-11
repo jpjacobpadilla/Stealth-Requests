@@ -27,3 +27,5 @@ parsers = [
 [tool.setuptools.packages.find]
 include = ["stealth_requests"]
 
+[tool.setuptools.package-data]
+stealth_requests = ["profiles.json"]

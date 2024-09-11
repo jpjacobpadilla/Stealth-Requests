@@ -1,5 +1,6 @@
-import random
+import os
 import json
+import random
 from dataclasses import dataclass
 from urllib.parse import urlparse
 from collections import defaultdict
@@ -58,7 +59,6 @@ class BaseStealthSession:
     
     @staticmethod
     def create_profile(impersonate: str) -> ClientProfile:
-        import os
         file_path = os.path.join(os.path.dirname(__file__), 'profiles.json')
 
         with open(file_path, encoding='utf-8', mode='r') as file:
