@@ -1,6 +1,7 @@
 import os
 import json
 import random
+from pathlib import Path
 from dataclasses import dataclass
 from urllib.parse import urlparse
 from collections import defaultdict
@@ -10,6 +11,25 @@ from .response import StealthResponse
 
 from curl_cffi.requests.session import Session, AsyncSession
 from curl_cffi.requests.models import Response
+
+
+SUPPORTED_IMAGE_EXTENSIONS = [
+    'jpeg', 'jpg', 'png', 'gif', 
+    'bmp', 'webp', 'ico', 'svg', 
+    'tiff', 'heic', 'heif'
+]
+CSS_EXTENSION = 'css'
+
+CHROME_MEDIA_TYPES = {
+    'image': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    'document': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'css': 'text/css,*/*;q=0.1',
+}
+SAFARI_IMAGE_TYPES = {
+    'image': 'image/webp,image/avif,image/jxl,image/heic,image/heic-sequence,video/*;q=0.8,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5',
+    'document': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'css': 'text/css,*/*;q=0.1',
+}
 
 
 @dataclass
@@ -29,8 +49,11 @@ class BaseStealthSession:
         ):
         if impersonate.lower() in ('chrome', 'chrome124'):
             impersonate = 'chrome124'
+            self.media_type_sets = CHROME_MEDIA_TYPES
+
         elif impersonate.lower() in ('safari', 'safari_17_0', 'safari17'):
             impersonate = 'safari17_0'
+            self.media_type_sets = SAFARI_IMAGE_TYPES
 
         self.profile = client_profile or BaseStealthSession.create_profile(impersonate)
         self.last_request_url = defaultdict(lambda: 'https://www.google.com/')
@@ -75,7 +98,6 @@ class BaseStealthSession:
         
     def initialize_chrome_headers(self) -> dict[str, str]:
         return {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "Accept-Encoding": "gzip, deflate, br, zstd",
             "Accept-Language": "en-US,en;q=0.9",
             "Cache-Control": "no-cache",
@@ -94,7 +116,6 @@ class BaseStealthSession:
 
     def initialize_safari_headers(self) -> dict[str, str]:
         return {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Encoding": "gzip, deflate, br",
             "Accept-Language": "en-US,en;q=0.9",
             "Cache-Control": "no-cache",
@@ -106,11 +127,24 @@ class BaseStealthSession:
             "User-Agent": self.profile.user_agent
         } 
 
+    def get_media_types(self, url: str) -> str:
+        path = Path(urlparse(url).path)
+        extension = path.suffix.removeprefix('.').lower()
+
+        if extension:
+            if extension in SUPPORTED_IMAGE_EXTENSIONS:
+                return self.media_type_sets['image']
+            if extension in CSS_EXTENSION:
+                return self.media_type_sets['css']
+
+        return self.media_type_sets['document']
+
     def get_dynamic_headers(self, url: str) -> dict[str, str]:
         parsed_url = urlparse(url)
         host = parsed_url.netloc
 
         headers = {
+            "Accept": self.get_media_types(url),
             "Host": host,
             "Referer": self.last_request_url[host]
         }
