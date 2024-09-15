@@ -6,6 +6,7 @@
 
 ### The All-In-One Solution to Web Scraping:
 - Mimic browser headers when scraping websites to stay undetected
+- Keeps track of dynamic headers such as `Referer` and `Host` as well as changes headers based on requested file type
 - Mask the TLS fingerprint of requests using the [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/) package
 - Automatically extract metadata from HTML responses including page title, description, author, and more
 - Easily convert HTML-based responses into [lxml](https://lxml.de/apidoc/lxml.html) and [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/) objects
