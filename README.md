@@ -5,12 +5,14 @@
 <h1 align="center">Stay Undetected While Scraping the Web.</h1>
 
 ### The All-In-One Solution to Web Scraping:
-- Mimic browser headers when scraping websites to stay undetected
-- Keeps track of dynamic headers such as `Referer` and `Host` as well as changes headers based on requested file type
-- Mask the TLS fingerprint of requests using the [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/) package
-- Automatically extract metadata from HTML responses including page title, description, author, and more
-- Methods to extract all page and image URLS from responses
-- Easily convert HTML-based responses into [lxml](https://lxml.de/apidoc/lxml.html) and [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/) objects
+- **Realistic HTTP Requests:**
+    - Mimics browser headers for undetected scraping, adapting to the requested file type
+    - Tracks dynamic headers such as `Referer` and `Host`
+    - Mask the TLS fingerprint of HTTP requests using the [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/) package
+- **Faster and Easier Parsing:**
+    - Automatically extracts metadata (title, description, author, etc..) from HTML-based responses
+    - Methods to extract all webpage and image URLS
+    - Seamlessly converts responses into [lxml](https://lxml.de/apidoc/lxml.html) and [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/) objects
 
 ### Install
 
