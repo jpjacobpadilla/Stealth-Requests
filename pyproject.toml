@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stealth-requests"
-version = "1.0"
+version = "1.1"
 description = "Make HTTP requests exactly like a browser."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.9"
