@@ -8,10 +8,10 @@
 - **Realistic HTTP Requests:**
     - Mimics browser headers for undetected scraping, adapting to the requested file type
     - Tracks dynamic headers such as `Referer` and `Host`
-    - Mask the TLS fingerprint of HTTP requests using the [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/) package
+    - Masks the TLS fingerprint of HTTP requests using the [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/) package
 - **Faster and Easier Parsing:**
-    - Automatically extracts metadata (title, description, author, etc..) from HTML-based responses
-    - Methods to extract all webpage and image URLS
+    - Automatically extracts metadata (title, description, author, etc.) from HTML-based responses
+    - Methods to extract all webpage and image URLs
     - Seamlessly converts responses into [lxml](https://lxml.de/apidoc/lxml.html) and [BeautifulSoup](https://beautiful-soup-4.readthedocs.io/en/latest/) objects
 
 ### Install
@@ -54,7 +54,7 @@ async with AsyncStealthSession(impersonate='safari') as session:
     resp = await session.get('https://link-here.com')
 ```
 
-or, for a one-off request you can make a request like this:
+or, for a one-off request, you can make a request like this:
 
 ```python
 import stealth_requests as requests
@@ -99,9 +99,9 @@ For simple parsing, I've also added the following convenience methods, from the 
 - `text_content()`: Get all text content in a response
 - `xpath()` Go right to using XPATH expressions instead of getting your own Lxml tree.
 
-### Get all Image and Page links from a response
+### Get All Image and Page Links From a Response
 
-If you would like to get all of the webpage URLS (`a` tags) from an HTML-based response, you can use the `links` property, and if you'd like to get all image URLS (`img` tags) you can use the `images` property from a response object.
+If you would like to get all of the webpage URLS (`a` tags) from an HTML-based response, you can use the `links` property. If you'd like to get all image URLS (`img` tags) you can use the `images` property from a response object.
 
 ```python
 import stealth_requests as requests
@@ -112,6 +112,6 @@ for image_url in resp.images:
 ```
 
 
-### Getting HTML responses in Markdown format
+### Getting HTML Responses in Markdown Format
 
 In some cases, it’s easier to work with a webpage in Markdown format rather than HTML. After making a GET request that returns HTML, you can use the `resp.markdown()` method to convert the response into a Markdown string, providing a simplified and readable version of the page content!
