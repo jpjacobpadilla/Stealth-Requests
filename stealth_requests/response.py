@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from urllib.parse import urljoin, urlparse
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -26,13 +27,15 @@ class StealthResponse():
     def __init__(self, resp):
         self._response = resp
 
-        self._tree = None 
-        self._important_meta_tags = None
+        self._tree: HtmlElement | None = None 
+        self._important_meta_tags: Metadata | None = None
+        self._links: tuple[str] = tuple()
+        self._images: tuple[str] = tuple()
     
     def __getattr__(self, name):
         return getattr(self._response, name)
 
-    def _get_tree(self):
+    def _get_tree(self) -> HtmlElement:
         try:
             from lxml import html
         except ImportError:
@@ -42,7 +45,9 @@ class StealthResponse():
         return self._tree
 
     def tree(self) -> HtmlElement:
-        return self._tree or self._get_tree()    
+        if self._tree is not None:
+            return self._tree
+        return self._get_tree()    
 
     def soup(self, parser: str = 'html.parser') -> BeautifulSoup:
         try:
@@ -89,7 +94,7 @@ class StealthResponse():
         keywords = tree.xpath('//head/meta[@name="keywords"]/@content')
         twitter_handle = tree.xpath('//head/meta[@name="twitter:site"]/@content')
         robots = tree.xpath('//head/meta[@name="robots"]/@content')
-        canonical = tree.xpath('//head/link[@rel="canonical"]/@content')
+        canonical = tree.xpath('//head/link[@rel="canonical"]/@href')
 
         self._important_meta_tags = Metadata(
             title = title[0] if title else None,
@@ -106,3 +111,30 @@ class StealthResponse():
     @property
     def meta(self):
         return self._important_meta_tags or self._set_important_meta_tags()
+
+    def _parse_links(self, tag: str) -> tuple[str]:
+        formatted_links = []
+
+        parsed_url = urlparse(self._response.url)
+        base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
+
+        for element, _, link, _ in self.tree().iterlinks():
+            if element.tag == tag:
+                if link.startswith('/'):
+                    formatted_links.append(base_url + link)
+                else:
+                    formatted_links.append(link)
+        
+        return tuple(formatted_links)
+
+    @property
+    def images(self):
+        if not self._images:
+            self._images = self._parse_links('img')
+        return self._images
+
+    @property
+    def links(self):
+        if not self._links:
+            self._links = self._parse_links('a')
+        return self._links
