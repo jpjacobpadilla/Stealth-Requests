@@ -115,3 +115,8 @@ for image_url in resp.images:
 ### Getting HTML Responses in Markdown Format
 
 In some cases, it’s easier to work with a webpage in Markdown format rather than HTML. After making a GET request that returns HTML, you can use the `resp.markdown()` method to convert the response into a Markdown string, providing a simplified and readable version of the page content!
+
+`markdown()` has two optional parameters:
+
+1. `content_xpath` An XPath expression, in the form of a string, which can be used to narrow down what text is converted to Markdown. This can be useful if you don't want the header and footer of a webpage to be turned into Markdown.
+2. `ignore_links` A boolean value that tells Html2Text whether it should include any links in the output of the Markdown.
