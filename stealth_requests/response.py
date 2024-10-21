@@ -57,15 +57,22 @@ class StealthResponse():
 
         return BeautifulSoup(self.content, parser)
     
-    def markdown(self):
+    def markdown(self, content_xpath: str | None = None, ignore_links: bool = True):
+        from lxml import etree
         try:
             import html2text
         except ImportError:
             raise ImportError(f'Html2text is required for markdown extraction. {PARSER_IMPORT_SOLUTION}')
 
         text_maker = html2text.HTML2Text()
-        text_maker.ignore_links = True
-        return text_maker.handle(str(self.soup()))
+        text_maker.ignore_links = ignore_links
+
+        tree = self.tree()
+        if content_xpath:
+            tree = tree.xpath(content_xpath)[0]
+        html = etree.tostring(tree, pretty_print=True, method="html").decode()
+
+        return text_maker.handle(html)
     
     def xpath(self, xp: str):
         return self.tree().xpath(xp)
