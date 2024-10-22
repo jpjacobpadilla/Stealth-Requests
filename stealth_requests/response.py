@@ -27,11 +27,11 @@ class StealthResponse():
     def __init__(self, resp):
         self._response = resp
 
-        self._tree: HtmlElement | None = None 
+        self._tree: HtmlElement | None = None
         self._important_meta_tags: Metadata | None = None
         self._links: tuple[str] = tuple()
         self._images: tuple[str] = tuple()
-    
+
     def __getattr__(self, name):
         return getattr(self._response, name)
 
@@ -47,7 +47,7 @@ class StealthResponse():
     def tree(self) -> HtmlElement:
         if self._tree is not None:
             return self._tree
-        return self._get_tree()    
+        return self._get_tree()
 
     def soup(self, parser: str = 'html.parser') -> BeautifulSoup:
         try:
@@ -56,7 +56,7 @@ class StealthResponse():
             raise ImportError(f'BeautifulSoup is required for markdown extraction. {PARSER_IMPORT_SOLUTION}')
 
         return BeautifulSoup(self.content, parser)
-    
+
     def markdown(self, content_xpath: str | None = None, ignore_links: bool = True):
         from lxml import etree
         try:
@@ -73,7 +73,7 @@ class StealthResponse():
         html = etree.tostring(tree, pretty_print=True, method="html").decode()
 
         return text_maker.handle(html)
-    
+
     def xpath(self, xp: str):
         return self.tree().xpath(xp)
 
@@ -131,7 +131,7 @@ class StealthResponse():
                     formatted_links.append(base_url + link)
                 else:
                     formatted_links.append(link)
-        
+
         return tuple(formatted_links)
 
     @property
@@ -145,3 +145,6 @@ class StealthResponse():
         if not self._links:
             self._links = self._parse_links('a')
         return self._links
+
+    def __repr__(self):
+        return f'<StealthResponse [Status: {self._response.status_code} Elapsed Time: {self._response.elapsed:.2f} seconds]>'
