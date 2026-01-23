@@ -82,6 +82,25 @@ class AsyncStealthSession(BaseStealthSession, AsyncSession):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    async def __aenter__(self):
+        aenter = getattr(super(), '__aenter__', None)
+        if aenter is not None:
+            return await aenter()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        aexit = getattr(super(), '__aexit__', None)
+        if aexit is not None:
+            return await aexit(exc_type, exc, tb)
+
+        aclose = getattr(self, 'aclose', None)
+        if aclose is not None:
+            await aclose()
+        else:
+            self.close()
+
+        return False
+
     async def request(self, method: HttpMethod, url: str, *args, retry: int = 0, **kwargs) -> StealthResponse:
         assert retry >= 0
 
