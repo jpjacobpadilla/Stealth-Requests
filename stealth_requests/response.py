@@ -124,7 +124,10 @@ class StealthResponse:
 
         tree = self.tree()
         if content_xpath:
-            tree = tree.xpath(content_xpath)[0]
+            results = tree.xpath(content_xpath)
+            if not results:
+                return ""
+            tree = results[0]
         html = etree.tostring(tree, pretty_print=True, method='html').decode()
 
         return text_maker.handle(html)
