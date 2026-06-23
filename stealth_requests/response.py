@@ -201,9 +201,8 @@ class StealthResponse:
         content = self._response.text
 
         pattern = r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,24}'
-
         matches = re.findall(pattern, content)
-        return tuple(set(matches))
+        return tuple(dict.fromkeys(matches))
 
     @property
     def phone_numbers(self) -> tuple[str]:
@@ -220,4 +219,4 @@ class StealthResponse:
         """
 
         matches = re.findall(pattern, content, re.VERBOSE)
-        return tuple(set(matches))
+        return tuple(dict.fromkeys(matches))

@@ -49,7 +49,8 @@ class StealthSession(BaseStealthSession, Session):
         super().__init__(*args, **kwargs)
 
     def request(self, method: HttpMethod, url: str, *args, retry: int = 0, **kwargs) -> StealthResponse:
-        assert retry >= 0
+        if retry < 0:
+            raise ValueError('retry must be >= 0')
 
         referer = {'Referer': self.last_request_url} if self.last_request_url else {}
         extra_headers = referer | kwargs.pop('headers', {})
@@ -84,7 +85,8 @@ class AsyncStealthSession(BaseStealthSession, AsyncSession):
         super().__init__(*args, **kwargs)
 
     async def request(self, method: HttpMethod, url: str, *args, retry: int = 0, **kwargs) -> StealthResponse:
-        assert retry >= 0
+        if retry < 0:
+            raise ValueError('retry must be >= 0')
 
         referer = {'Referer': self.last_request_url} if self.last_request_url else {}
         extra_headers = referer | kwargs.pop('headers', {})
