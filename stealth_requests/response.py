@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from urllib.parse import urlparse
-from typing import TYPE_CHECKING
 import re
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+from urllib.parse import urljoin
 
 if TYPE_CHECKING:
-    from lxml.html import HtmlElement
     from bs4 import BeautifulSoup
+    from lxml.html import HtmlElement
 
 
 @dataclass
@@ -83,15 +83,9 @@ class StealthResponse:
     def _parse_links(self, tag: str) -> tuple[str]:
         formatted_links = []
 
-        parsed_url = urlparse(self._response.url)
-        base_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
-
         for element, _, link, _ in self.tree().iterlinks():
             if element.tag == tag:
-                if link.startswith('/'):
-                    formatted_links.append(base_url + link)
-                else:
-                    formatted_links.append(link)
+                formatted_links.append(urljoin(self._response.url, link))
 
         return tuple(formatted_links)
 
@@ -104,7 +98,7 @@ class StealthResponse:
         try:
             from bs4 import BeautifulSoup
         except ImportError:
-            raise ImportError(f'BeautifulSoup is required for markdown extraction. {PARSER_IMPORT_SOLUTION}')
+            raise ImportError(f'BeautifulSoup is required for HTML parsing. {PARSER_IMPORT_SOLUTION}')
 
         return BeautifulSoup(self.content, parser)
 
@@ -126,7 +120,7 @@ class StealthResponse:
         if content_xpath:
             results = tree.xpath(content_xpath)
             if not results:
-                return ""
+                return ''
             tree = results[0]
         html = etree.tostring(tree, pretty_print=True, method='html').decode()
 
@@ -151,18 +145,18 @@ class StealthResponse:
     @property
     def images(self) -> tuple[str]:
         if not self._images:
-            self._images = self._parse_links('img')
+            self._images = tuple(dict.fromkeys(self._parse_links('img')))
         return self._images
 
     @property
     def links(self) -> tuple[str]:
         if not self._links:
-            self._links = self._parse_links('a')
+            self._links = tuple(dict.fromkeys(self._parse_links('a')))
         return self._links
 
     @staticmethod
     def _parse_table(table_element) -> dict[str, list[str]] | None:
-        header_row = table_element.xpath('.//thead/tr[1] | .//tr[th][1]')
+        header_row = table_element.xpath('./thead/tr[1] | ./tr[th][1]')
         if not header_row:
             return None
 
@@ -170,9 +164,9 @@ class StealthResponse:
         if not headers or all(h == '' for h in headers):
             return None
 
-        body_rows = table_element.xpath('.//tbody/tr')
+        body_rows = table_element.xpath('./tbody/tr')
         if not body_rows:
-            all_rows = table_element.xpath('.//tr')
+            all_rows = table_element.xpath('./tr')
             # Skip the header row
             body_rows = [r for r in all_rows if r is not header_row[0]]
 
@@ -207,9 +201,8 @@ class StealthResponse:
         content = self._response.text
 
         pattern = r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,24}'
-
         matches = re.findall(pattern, content)
-        return tuple(set(matches))
+        return tuple(dict.fromkeys(matches))
 
     @property
     def phone_numbers(self) -> tuple[str]:
@@ -226,4 +219,4 @@ class StealthResponse:
         """
 
         matches = re.findall(pattern, content, re.VERBOSE)
-        return tuple(set(matches))
+        return tuple(dict.fromkeys(matches))
