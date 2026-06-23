@@ -1,15 +1,14 @@
-import time
+import asyncio
 import json
 import random
-import asyncio
+import time
+from functools import partialmethod
 from pathlib import Path
 from urllib.parse import urlparse, urlunparse
-from functools import partialmethod
+
+from curl_cffi.requests.session import AsyncSession, HttpMethod, Session
 
 from .response import StealthResponse
-
-from curl_cffi.requests.session import Session, AsyncSession, HttpMethod
-
 
 RETRY_DELAY = 2  # Seconds
 RETRYABLE_STATUS_CODES = {
@@ -39,9 +38,10 @@ class BaseStealthSession:
         headers = kwargs.pop('headers', {})
         headers.setdefault('User-Agent', random.choice(user_agents))
 
+        impersonate = kwargs.pop('impersonate', 'chrome136')
         self.last_request_url = None
 
-        super().__init__(impersonate='chrome136', timeout=timeout, headers=headers, **kwargs)
+        super().__init__(impersonate=impersonate, timeout=timeout, headers=headers, **kwargs)
 
 
 class StealthSession(BaseStealthSession, Session):
@@ -65,7 +65,7 @@ class StealthSession(BaseStealthSession, Session):
             time.sleep(RETRY_DELAY)
         elapsed = time.perf_counter() - start
 
-        parsed = urlparse(url)
+        parsed = urlparse(resp.url)
         self.last_request_url = urlunparse(parsed._replace(query='', fragment=''))
 
         return StealthResponse(resp, elapsed)
@@ -100,7 +100,7 @@ class AsyncStealthSession(BaseStealthSession, AsyncSession):
             await asyncio.sleep(RETRY_DELAY)
         elapsed = time.perf_counter() - start
 
-        parsed = urlparse(url)
+        parsed = urlparse(resp.url)
         self.last_request_url = urlunparse(parsed._replace(query='', fragment=''))
 
         return StealthResponse(resp, elapsed)

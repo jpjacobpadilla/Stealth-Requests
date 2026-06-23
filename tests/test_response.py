@@ -1,4 +1,7 @@
 from types import SimpleNamespace
+from unittest.mock import patch
+
+import pytest
 
 from stealth_requests.response import StealthResponse
 
@@ -263,6 +266,9 @@ class TestTables:
         resp = make_response(html)
         # Both the outer and inner table should be parsed
         assert len(resp.tables) == 2
+        outer = next(t for t in resp.tables if 'Outer' in t)
+        # Outer table must have exactly 1 row (no inner table rows leaked in)
+        assert len(outer['Outer']) == 1
         inner = next(t for t in resp.tables if 'Inner' in t)
         assert inner == {'Inner': ['nested']}
 
@@ -444,6 +450,21 @@ class TestLinks:
         second = resp.links
         assert first is second
 
+    def test_links_deduplicate(self):
+        html = '<html><body><a href="/a">A</a><a href="/a">A again</a></body></html>'
+        resp = make_response(html)
+        assert resp.links == ('https://example.com/a',)
+
+    def test_relative_bare_path(self):
+        html = '<html><body><a href="page.html">link</a></body></html>'
+        resp = make_response(html)
+        assert resp.links == ('https://example.com/page.html',)
+
+    def test_relative_protocol_relative(self):
+        html = '<html><body><a href="//other.com/page">link</a></body></html>'
+        resp = make_response(html)
+        assert resp.links == ('https://other.com/page',)
+
 
 # ── Images ──────────────────────────────────────────────────────────────
 
@@ -463,6 +484,257 @@ class TestImages:
         html = '<html><body><p>No images</p></body></html>'
         resp = make_response(html)
         assert resp.images == ()
+
+    def test_images_deduplicate(self):
+        html = '<html><body><img src="/img.png"><img src="/img.png"></body></html>'
+        resp = make_response(html)
+        assert resp.images == ('https://example.com/img.png',)
+
+    def test_images_mixed_absolute_relative(self):
+        html = '<html><body><img src="/img.png"><img src="https://example.com/logo.png"></body></html>'
+        resp = make_response(html)
+        assert len(resp.images) == 2
+        assert 'https://example.com/img.png' in resp.images
+        assert 'https://example.com/logo.png' in resp.images
+
+
+# ── Repr ────────────────────────────────────────────────────────────────
+
+
+# ── Tree ─────────────────────────────────────────────────────────────────
+
+
+class TestTree:
+    def test_tree_returns_html_element(self):
+        resp = make_response('<html><body><p>Hello</p></body></html>')
+        tree = resp.tree()
+        from lxml.html import HtmlElement
+
+        assert isinstance(tree, HtmlElement)
+
+    def test_tree_parses_content(self):
+        resp = make_response('<html><body><p id="x">Hi</p></body></html>')
+        assert resp.tree().xpath('//p[@id="x"]/text()') == ['Hi']
+
+    def test_tree_cached(self):
+        resp = make_response('<html></html>')
+        assert resp.tree() is resp.tree()
+
+    def test_tree_empty_html_raises_error(self):
+        resp = make_response('')
+        from lxml.etree import ParserError
+
+        with pytest.raises(ParserError):
+            resp.tree()
+
+
+# ── Soup ─────────────────────────────────────────────────────────────────
+
+
+class TestSoup:
+    def test_soup_returns_beautifulsoup(self):
+        pytest.importorskip('bs4')
+        resp = make_response('<html><body><p>Hello</p></body></html>')
+        soup = resp.soup()
+        from bs4 import BeautifulSoup
+
+        assert isinstance(soup, BeautifulSoup)
+
+    def test_soup_parses_content(self):
+        pytest.importorskip('bs4')
+        resp = make_response('<html><body><p id="x">Hi</p></body></html>')
+        assert resp.soup().find('p', id='x').text == 'Hi'
+
+    def test_soup_custom_parser(self):
+        pytest.importorskip('bs4')
+        resp = make_response('<html><body><p>Test</p></body></html>')
+        soup = resp.soup(parser='lxml')
+        assert soup.find('p').text == 'Test'
+
+
+# ── Markdown ─────────────────────────────────────────────────────────────
+
+
+class TestMarkdown:
+    def test_markdown_converts_html(self):
+        pytest.importorskip('html2text')
+        resp = make_response('<html><body><p><strong>Hello</strong></p></body></html>')
+        md = resp.markdown()
+        assert 'Hello' in md
+
+    def test_markdown_with_xpath(self):
+        pytest.importorskip('html2text')
+        resp = make_response('<html><body><div id="content"><p>Only this</p></div><p>Not this</p></body></html>')
+        md = resp.markdown(content_xpath='//div[@id="content"]')
+        assert 'Only this' in md
+        assert 'Not this' not in md
+
+    def test_markdown_xpath_no_match(self):
+        pytest.importorskip('html2text')
+        resp = make_response('<html><body><p>Hi</p></body></html>')
+        assert resp.markdown(content_xpath='//nonexistent') == ''
+
+    def test_markdown_ignore_links_true(self):
+        pytest.importorskip('html2text')
+        resp = make_response('<html><body><a href="https://example.com">click</a></body></html>')
+        md = resp.markdown(ignore_links=True)
+        assert 'click' in md
+        assert '](' not in md
+
+    def test_markdown_ignore_links_false(self):
+        pytest.importorskip('html2text')
+        resp = make_response('<html><body><a href="https://example.com">click</a></body></html>')
+        md = resp.markdown(ignore_links=False)
+        assert 'click' in md
+        assert 'https://example.com' in md
+
+
+# ── XPath ────────────────────────────────────────────────────────────────
+
+
+class TestXpath:
+    def test_xpath_finds_elements(self):
+        resp = make_response('<html><body><p>One</p><p>Two</p></body></html>')
+        assert len(resp.xpath('//p')) == 2
+
+    def test_xpath_text_content(self):
+        resp = make_response('<html><body><p>Hello</p></body></html>')
+        assert resp.xpath('//p/text()') == ['Hello']
+
+    def test_xpath_attribute(self):
+        resp = make_response('<html><body><a href="/page">link</a></body></html>')
+        assert resp.xpath('//a/@href') == ['/page']
+
+    def test_xpath_no_match(self):
+        resp = make_response('<html></html>')
+        assert resp.xpath('//nonexistent') == []
+
+
+# ── Iterlinks ────────────────────────────────────────────────────────────
+
+
+class TestIterlinks:
+    def test_iterlinks_finds_all_links(self):
+        resp = make_response('<html><body><a href="/a">A</a><img src="/img.png"></body></html>')
+        links = list(resp.iterlinks())
+        assert len(links) == 2
+
+    def test_iterlinks_empty(self):
+        resp = make_response('<html><body><p>No links</p></body></html>')
+        assert list(resp.iterlinks()) == []
+
+
+# ── Itertext ─────────────────────────────────────────────────────────────
+
+
+class TestItertext:
+    def test_itertext_finds_text(self):
+        resp = make_response('<html><body><p>Hello</p><p>World</p></body></html>')
+        texts = list(resp.itertext())
+        assert 'Hello' in texts
+        assert 'World' in texts
+
+    def test_itertext_empty(self):
+        resp = make_response('<html><body><div></div></body></html>')
+        assert list(resp.itertext()) == []
+
+
+# ── TextContent ──────────────────────────────────────────────────────────
+
+
+class TestTextContent:
+    def test_text_content_returns_text(self):
+        resp = make_response('<html><body><p>Hello <strong>World</strong></p></body></html>')
+        text = resp.text_content()
+        assert 'Hello' in text
+        assert 'World' in text
+
+    def test_text_content_empty(self):
+        resp = make_response('<html><body></body></html>')
+        assert resp.text_content() == ''
+
+
+# ── Getattr delegation ───────────────────────────────────────────────────
+
+
+class TestGetattr:
+    def test_delegates_status_code(self):
+        resp = make_response('<html></html>')
+        assert resp.status_code == 200
+
+    def test_delegates_text(self):
+        resp = make_response('<p>Hello</p>')
+        assert resp.text == '<p>Hello</p>'
+
+    def test_delegates_url(self):
+        resp = make_response('<html></html>', url='https://custom.com')
+        assert resp.url == 'https://custom.com'
+
+    def test_delegates_content_bytes(self):
+        resp = make_response('<p>test</p>')
+        assert resp.content == b'<p>test</p>'
+
+    def test_missing_attribute_raises_error(self):
+        resp = make_response('<html></html>')
+        with pytest.raises(AttributeError):
+            _ = resp.nonexistent_attr
+
+
+# ── Error Handling (missing parsers) ─────────────────────────────────
+
+
+class TestErrorHandling:
+    def test_tree_raises_import_error_without_lxml(self):
+        resp = make_response('<html></html>')
+        with patch.dict('sys.modules', {'lxml': None}):
+            with pytest.raises(ImportError, match='Lxml is not installed'):
+                resp.tree()
+
+    def test_soup_raises_import_error_without_bs4(self):
+        resp = make_response('<html></html>')
+        with patch.dict('sys.modules', {'bs4': None}):
+            with pytest.raises(ImportError, match='BeautifulSoup is required for HTML parsing'):
+                resp.soup()
+
+    def test_markdown_raises_import_error_without_html2text(self):
+        pytest.importorskip('lxml')
+        resp = make_response('<html></html>')
+        with patch.dict('sys.modules', {'html2text': None}):
+            with pytest.raises(ImportError, match='Html2text is required for markdown extraction'):
+                resp.markdown()
+
+
+# ── Non-HTML Responses ───────────────────────────────────────────────
+
+
+class TestNonHtmlResponses:
+    def test_json_body_links_empty(self):
+        pytest.importorskip('lxml')
+        resp = make_response('{"key": "value"}')
+        assert resp.links == ()
+
+    def test_json_body_images_empty(self):
+        pytest.importorskip('lxml')
+        resp = make_response('{"key": "value"}')
+        assert resp.images == ()
+
+    def test_json_body_tables_empty(self):
+        pytest.importorskip('lxml')
+        resp = make_response('{"key": "value"}')
+        assert resp.tables == []
+
+    def test_plain_text_links_empty(self):
+        pytest.importorskip('lxml')
+        resp = make_response('Just some plain text with no HTML tags')
+        assert resp.links == ()
+
+    def test_json_body_emails_extracted(self):
+        resp = make_response('{"email": "user@example.com"}')
+        assert 'user@example.com' in resp.emails
+
+    def test_plain_text_phone_numbers_extracted(self):
+        resp = make_response('Call (555) 123-4567 for info')
+        assert '(555) 123-4567' in resp.phone_numbers
 
 
 # ── Repr ────────────────────────────────────────────────────────────────
