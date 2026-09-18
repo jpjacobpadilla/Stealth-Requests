@@ -1844,7 +1844,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", marker = "extra == 'parsers'" },
-    { name = "curl-cffi", specifier = ">=0.16.0" },
+    { name = "curl-cffi", specifier = ">=0.14.0" },
     { name = "html2text", marker = "extra == 'parsers'" },
     { name = "lxml", marker = "extra == 'parsers'" },
 ]
