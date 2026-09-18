@@ -15,7 +15,7 @@ authors = [
 keywords = ["HTTP", "requests", "scraping", "browser"]
 urls = { "Homepage" = "https://github.com/jpjacobpadilla/Stealth-Requests" }
 
-dependencies = ["curl_cffi>=0.16.0"]
+dependencies = ["curl_cffi>=0.14.0"]
 
 [project.optional-dependencies]
 parsers = [

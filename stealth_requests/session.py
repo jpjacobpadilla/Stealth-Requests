@@ -1,3 +1,4 @@
+import re
 import time
 import random
 import asyncio
@@ -25,11 +26,29 @@ RETRYABLE_STATUS_CODES = {
 }
 
 
-# The browser curl_cffi impersonates at the TLS/HTTP2 level. The User-Agent below is
-# built from the same version so that the advertised version, the Sec-CH-UA client
-# hints curl_cffi sends, and the TLS fingerprint all agree.
-CHROME_VERSION = 150
-IMPERSONATE = f'chrome{CHROME_VERSION}'
+# curl_cffi resolves the bare 'chrome' alias to the newest Chrome it ships, so
+# upgrading curl_cffi moves the TLS/HTTP2 fingerprint forward without a release here.
+IMPERSONATE = 'chrome'
+
+
+def impersonated_chrome_version() -> int | None:
+    """Major version of the Chrome build curl_cffi will impersonate.
+
+    curl_cffi exposes no documented way to resolve the alias, so this reads a
+    private table and returns None if that table ever moves. Callers are expected
+    to leave curl_cffi's own headers alone in that case: advertising a version we
+    can't confirm is worse than not advertising one at all.
+    """
+    try:
+        from curl_cffi.requests.impersonate import REAL_TARGET_MAP
+
+        match = re.search(r'\d+', REAL_TARGET_MAP[IMPERSONATE])
+        return int(match.group()) if match else None
+    except Exception:
+        return None
+
+
+CHROME_VERSION = impersonated_chrome_version()
 
 # Chrome reduced its User-Agent string: the platform token is frozen and the version is
 # always reported as MAJOR.0.0.0. Real Chrome never reports the CPU (there is no
@@ -48,7 +67,14 @@ PLATFORM_WEIGHTS = (72, 21, 7)
 
 
 def random_identity() -> dict[str, str]:
-    """A self-consistent User-Agent and platform hint for one session."""
+    """A self-consistent User-Agent and platform hint for one session.
+
+    Empty if the impersonated version can't be resolved, which leaves curl_cffi's
+    own consistent headers in place.
+    """
+    if CHROME_VERSION is None:
+        return {}
+
     platform, ch_platform = random.choices(PLATFORMS, weights=PLATFORM_WEIGHTS)[0]
     user_agent = (
         f'Mozilla/5.0 ({platform}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{CHROME_VERSION}.0.0.0 Safari/537.36'
