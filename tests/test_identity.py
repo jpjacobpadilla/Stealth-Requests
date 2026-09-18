@@ -1,3 +1,4 @@
+import random
 import re
 
 import pytest
@@ -42,7 +43,15 @@ def test_every_platform_token_is_one_chrome_actually_sends():
 
 
 def test_identity_rotates_between_sessions():
-    agents = {random_identity()['User-Agent'] for _ in range(200)}
+    # Seeded so a rare sample that happens to miss the least-weighted platform
+    # can't fail the suite.
+    state = random.getstate()
+    random.seed(0)
+    try:
+        agents = {random_identity()['User-Agent'] for _ in range(200)}
+    finally:
+        random.setstate(state)
+
     assert len(agents) == len(PLATFORMS)
 
 
