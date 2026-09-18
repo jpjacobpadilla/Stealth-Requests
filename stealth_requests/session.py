@@ -1,8 +1,6 @@
 import time
-import json
 import random
 import asyncio
-from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
 
@@ -27,9 +25,35 @@ RETRYABLE_STATUS_CODES = {
 }
 
 
-user_agents_path = Path(__file__).parent / 'user_agents.json'
-with user_agents_path.open() as f:
-    user_agents = json.load(f)
+# The browser curl_cffi impersonates at the TLS/HTTP2 level. The User-Agent below is
+# built from the same version so that the advertised version, the Sec-CH-UA client
+# hints curl_cffi sends, and the TLS fingerprint all agree.
+CHROME_VERSION = 150
+IMPERSONATE = f'chrome{CHROME_VERSION}'
+
+# Chrome reduced its User-Agent string: the platform token is frozen and the version is
+# always reported as MAJOR.0.0.0. Real Chrome never reports the CPU (there is no
+# "Apple M3" token) and always says "Intel Mac OS X 10_15_7" on macOS, whatever the
+# hardware or OS version actually is. Each entry pairs a platform token with the
+# matching Sec-CH-UA-Platform value so the two can't drift apart.
+PLATFORMS = [
+    ('Windows NT 10.0; Win64; x64', '"Windows"'),
+    ('Macintosh; Intel Mac OS X 10_15_7', '"macOS"'),
+    ('X11; Linux x86_64', '"Linux"'),
+]
+
+# Roughly the desktop Chrome split, so a rotated identity looks like a plausible
+# visitor rather than an evenly-weighted draw across platforms.
+PLATFORM_WEIGHTS = (72, 21, 7)
+
+
+def random_identity() -> dict[str, str]:
+    """A self-consistent User-Agent and platform hint for one session."""
+    platform, ch_platform = random.choices(PLATFORMS, weights=PLATFORM_WEIGHTS)[0]
+    user_agent = (
+        f'Mozilla/5.0 ({platform}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{CHROME_VERSION}.0.0.0 Safari/537.36'
+    )
+    return {'User-Agent': user_agent, 'Sec-CH-UA-Platform': ch_platform}
 
 
 class BaseStealthSession:
@@ -37,11 +61,12 @@ class BaseStealthSession:
         timeout = kwargs.pop('timeout', 30)
 
         headers = kwargs.pop('headers', {})
-        headers.setdefault('User-Agent', random.choice(user_agents))
+        for header, value in random_identity().items():
+            headers.setdefault(header, value)
 
         self.last_request_url = None
 
-        super().__init__(impersonate='chrome136', timeout=timeout, headers=headers, **kwargs)
+        super().__init__(impersonate=IMPERSONATE, timeout=timeout, headers=headers, **kwargs)
 
 
 class StealthSession(BaseStealthSession, Session):

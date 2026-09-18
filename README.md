@@ -10,7 +10,8 @@
 ### Features
 - **Realistic HTTP Requests:**
     - Mimics Chrome browser for undetected scraping using [curl_cffi](https://curl-cffi.readthedocs.io/en/latest/)
-    - Automatically rotates User Agents between requests
+    - Rotates between Windows, macOS and Linux identities, one per session
+    - Keeps the User-Agent, the `Sec-CH-UA` client hints and the TLS fingerprint in agreement
     - Tracks and updates the `Referer` header to simulate realistic request chains
     - Built-in retry logic for failed requests (e.g. 429, 503, 522)
 - **Faster and Easier Parsing:**
