@@ -17,7 +17,6 @@ URL = 'https://httpbin.org'
 
 PLATFORM_HINTS = dict(PLATFORMS)
 
-# Chrome's reduced User-Agent: a frozen platform token and a MAJOR.0.0.0 version.
 UA_PATTERN = re.compile(
     r'Mozilla/5\.0 \((?P<platform>[^)]+)\) AppleWebKit/537\.36 '
     r'\(KHTML, like Gecko\) Chrome/(?P<version>\d+)\.0\.0\.0 Safari/537\.36'
@@ -28,7 +27,6 @@ UA_PATTERN = re.compile(
 
 
 def test_impersonates_the_newest_chrome_curl_cffi_ships():
-    # The bare alias is the point: pinning a version here would go stale.
     assert IMPERSONATE == 'chrome'
 
 
@@ -40,9 +38,6 @@ def test_version_resolves_to_the_alias_target():
 
 
 def test_identity_is_empty_when_the_version_cannot_be_resolved(monkeypatch):
-    # curl_cffi's table is private, so the unresolvable path has to stay safe:
-    # no overrides at all, rather than a version that might contradict the TLS
-    # fingerprint.
     monkeypatch.setattr(session_module, 'CHROME_VERSION', None)
     assert random_identity() == {}
 
@@ -53,7 +48,7 @@ def test_unresolvable_version_leaves_curl_cffi_headers_intact(monkeypatch):
     with StealthSession() as s:
         headers = s.get(f'{URL}/headers', retry=2).json()['headers']
 
-    # Still a real Chrome UA, just curl_cffi's own rather than one we built.
+    # curl_cffi's own UA, not one we built.
     assert UA_PATTERN.fullmatch(headers['User-Agent'])
 
 
@@ -76,8 +71,7 @@ def test_every_platform_token_is_one_chrome_actually_sends():
 
 
 def test_identity_rotates_between_sessions():
-    # Seeded so a rare sample that happens to miss the least-weighted platform
-    # can't fail the suite.
+    # Seeded so a sample missing the least-weighted platform can't fail the suite.
     state = random.getstate()
     random.seed(0)
     try:
@@ -95,8 +89,7 @@ def _assert_consistent(headers):
     match = UA_PATTERN.fullmatch(headers['User-Agent'])
     assert match, f'not a real Chrome UA: {headers["User-Agent"]}'
     assert headers['Sec-Ch-Ua-Platform'] == PLATFORM_HINTS[match.group('platform')]
-    # The brand hints come from curl_cffi's impersonation profile, so this is what
-    # catches the UA drifting away from the TLS fingerprint.
+    # Brand hints come from curl_cffi, so this catches the UA drifting from the TLS fp.
     assert f'"{CHROME_VERSION}"' in headers['Sec-Ch-Ua']
 
 

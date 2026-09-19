@@ -26,19 +26,12 @@ RETRYABLE_STATUS_CODES = {
 }
 
 
-# curl_cffi resolves the bare 'chrome' alias to the newest Chrome it ships, so
-# upgrading curl_cffi moves the TLS/HTTP2 fingerprint forward without a release here.
+# curl_cffi resolves 'chrome' to the newest Chrome it ships.
 IMPERSONATE = 'chrome'
 
 
 def impersonated_chrome_version() -> int | None:
-    """Major version of the Chrome build curl_cffi will impersonate.
-
-    curl_cffi exposes no documented way to resolve the alias, so this reads a
-    private table and returns None if that table ever moves. Callers are expected
-    to leave curl_cffi's own headers alone in that case: advertising a version we
-    can't confirm is worse than not advertising one at all.
-    """
+    # REAL_TARGET_MAP is private, so fall back to None if it ever moves.
     try:
         from curl_cffi.requests.impersonate import REAL_TARGET_MAP
 
@@ -50,28 +43,19 @@ def impersonated_chrome_version() -> int | None:
 
 CHROME_VERSION = impersonated_chrome_version()
 
-# Chrome reduced its User-Agent string: the platform token is frozen and the version is
-# always reported as MAJOR.0.0.0. Real Chrome never reports the CPU (there is no
-# "Apple M3" token) and always says "Intel Mac OS X 10_15_7" on macOS, whatever the
-# hardware or OS version actually is. Each entry pairs a platform token with the
-# matching Sec-CH-UA-Platform value so the two can't drift apart.
+# The only platform tokens Chrome sends, each with its Sec-CH-UA-Platform value.
 PLATFORMS = [
     ('Windows NT 10.0; Win64; x64', '"Windows"'),
     ('Macintosh; Intel Mac OS X 10_15_7', '"macOS"'),
     ('X11; Linux x86_64', '"Linux"'),
 ]
 
-# Roughly the desktop Chrome split, so a rotated identity looks like a plausible
-# visitor rather than an evenly-weighted draw across platforms.
+# Rough desktop Chrome split.
 PLATFORM_WEIGHTS = (72, 21, 7)
 
 
 def random_identity() -> dict[str, str]:
-    """A self-consistent User-Agent and platform hint for one session.
-
-    Empty if the impersonated version can't be resolved, which leaves curl_cffi's
-    own consistent headers in place.
-    """
+    # Without a known version, leave curl_cffi's own consistent headers alone.
     if CHROME_VERSION is None:
         return {}
 
