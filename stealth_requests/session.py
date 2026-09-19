@@ -1,8 +1,6 @@
+import re
 import time
-import json
-import random
 import asyncio
-from pathlib import Path
 from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
 
@@ -27,9 +25,37 @@ RETRYABLE_STATUS_CODES = {
 }
 
 
-user_agents_path = Path(__file__).parent / 'user_agents.json'
-with user_agents_path.open() as f:
-    user_agents = json.load(f)
+# curl_cffi resolves 'chrome' to the newest Chrome it ships.
+IMPERSONATE = 'chrome'
+
+
+def impersonated_chrome_version() -> int | None:
+    # REAL_TARGET_MAP is private, so fall back to None if it ever moves.
+    try:
+        from curl_cffi.requests.impersonate import REAL_TARGET_MAP
+
+        match = re.search(r'\d+', REAL_TARGET_MAP[IMPERSONATE])
+        return int(match.group()) if match else None
+    except Exception:
+        return None
+
+
+CHROME_VERSION = impersonated_chrome_version()
+
+# Chrome reports this token on every Mac, whatever the hardware or OS version.
+PLATFORM = 'Macintosh; Intel Mac OS X 10_15_7'
+PLATFORM_HINT = '"macOS"'
+
+
+def identity() -> dict[str, str]:
+    # Without a known version, leave curl_cffi's own consistent headers alone.
+    if CHROME_VERSION is None:
+        return {}
+
+    user_agent = (
+        f'Mozilla/5.0 ({PLATFORM}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{CHROME_VERSION}.0.0.0 Safari/537.36'
+    )
+    return {'User-Agent': user_agent, 'Sec-CH-UA-Platform': PLATFORM_HINT}
 
 
 class BaseStealthSession:
@@ -37,11 +63,12 @@ class BaseStealthSession:
         timeout = kwargs.pop('timeout', 30)
 
         headers = kwargs.pop('headers', {})
-        headers.setdefault('User-Agent', random.choice(user_agents))
+        for header, value in identity().items():
+            headers.setdefault(header, value)
 
         self.last_request_url = None
 
-        super().__init__(impersonate='chrome136', timeout=timeout, headers=headers, **kwargs)
+        super().__init__(impersonate=IMPERSONATE, timeout=timeout, headers=headers, **kwargs)
 
 
 class StealthSession(BaseStealthSession, Session):
