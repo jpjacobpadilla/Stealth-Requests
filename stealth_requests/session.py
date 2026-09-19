@@ -1,6 +1,5 @@
 import re
 import time
-import random
 import asyncio
 from urllib.parse import urlparse, urlunparse
 from functools import partialmethod
@@ -43,27 +42,20 @@ def impersonated_chrome_version() -> int | None:
 
 CHROME_VERSION = impersonated_chrome_version()
 
-# The only platform tokens Chrome sends, each with its Sec-CH-UA-Platform value.
-PLATFORMS = [
-    ('Windows NT 10.0; Win64; x64', '"Windows"'),
-    ('Macintosh; Intel Mac OS X 10_15_7', '"macOS"'),
-    ('X11; Linux x86_64', '"Linux"'),
-]
-
-# Rough desktop Chrome split.
-PLATFORM_WEIGHTS = (72, 21, 7)
+# Chrome reports this token on every Mac, whatever the hardware or OS version.
+PLATFORM = 'Macintosh; Intel Mac OS X 10_15_7'
+PLATFORM_HINT = '"macOS"'
 
 
-def random_identity() -> dict[str, str]:
+def identity() -> dict[str, str]:
     # Without a known version, leave curl_cffi's own consistent headers alone.
     if CHROME_VERSION is None:
         return {}
 
-    platform, ch_platform = random.choices(PLATFORMS, weights=PLATFORM_WEIGHTS)[0]
     user_agent = (
-        f'Mozilla/5.0 ({platform}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{CHROME_VERSION}.0.0.0 Safari/537.36'
+        f'Mozilla/5.0 ({PLATFORM}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{CHROME_VERSION}.0.0.0 Safari/537.36'
     )
-    return {'User-Agent': user_agent, 'Sec-CH-UA-Platform': ch_platform}
+    return {'User-Agent': user_agent, 'Sec-CH-UA-Platform': PLATFORM_HINT}
 
 
 class BaseStealthSession:
@@ -71,7 +63,7 @@ class BaseStealthSession:
         timeout = kwargs.pop('timeout', 30)
 
         headers = kwargs.pop('headers', {})
-        for header, value in random_identity().items():
+        for header, value in identity().items():
             headers.setdefault(header, value)
 
         self.last_request_url = None
